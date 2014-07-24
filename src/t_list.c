@@ -404,6 +404,7 @@ void linsertCommand(redisClient *c) {
 }
 
 void llenCommand(redisClient *c) {
+
     robj *o = lookupKeyReadOrReply(c,c->argv[1],shared.czero);
     if (o == NULL || checkType(c,o,REDIS_LIST)) return;
     addReplyLongLong(c,listTypeLength(o));
