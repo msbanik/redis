@@ -115,48 +115,52 @@ struct redisCommand *commandTable;
  * M: Do not automatically propagate the command on MONITOR.
  * k: Perform an implicit ASKING for this command, so the command will be
  *    accepted in cluster mode if the slot is marked as 'importing'.
+ * F: Fast command: O(1) or O(log(N)) command that should never delay
+ *    its execution as long as the kernel scheduler is giving us time.
+ *    Note that commands that may trigger a DEL as a side effect (like SET)
+ *    are not fast commands.
  */
 struct redisCommand redisCommandTable[] = {
-    {"get",getCommand,2,"r",0,NULL,1,1,1,0,0},
+    {"get",getCommand,2,"rF",0,NULL,1,1,1,0,0},
     {"set",setCommand,-3,"wm",0,NULL,1,1,1,0,0},
-    {"setnx",setnxCommand,3,"wm",0,NULL,1,1,1,0,0},
+    {"setnx",setnxCommand,3,"wmF",0,NULL,1,1,1,0,0},
     {"setex",setexCommand,4,"wm",0,NULL,1,1,1,0,0},
     {"psetex",psetexCommand,4,"wm",0,NULL,1,1,1,0,0},
     {"append",appendCommand,3,"wm",0,NULL,1,1,1,0,0},
-    {"strlen",strlenCommand,2,"r",0,NULL,1,1,1,0,0},
+    {"strlen",strlenCommand,2,"rF",0,NULL,1,1,1,0,0},
     {"del",delCommand,-2,"w",0,NULL,1,-1,1,0,0},
-    {"exists",existsCommand,2,"r",0,NULL,1,1,1,0,0},
+    {"exists",existsCommand,2,"rF",0,NULL,1,1,1,0,0},
     {"setbit",setbitCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"getbit",getbitCommand,3,"r",0,NULL,1,1,1,0,0},
+    {"getbit",getbitCommand,3,"rF",0,NULL,1,1,1,0,0},
     {"setrange",setrangeCommand,4,"wm",0,NULL,1,1,1,0,0},
     {"getrange",getrangeCommand,4,"r",0,NULL,1,1,1,0,0},
     {"substr",getrangeCommand,4,"r",0,NULL,1,1,1,0,0},
-    {"incr",incrCommand,2,"wm",0,NULL,1,1,1,0,0},
-    {"decr",decrCommand,2,"wm",0,NULL,1,1,1,0,0},
+    {"incr",incrCommand,2,"wmF",0,NULL,1,1,1,0,0},
+    {"decr",decrCommand,2,"wmF",0,NULL,1,1,1,0,0},
     {"mget",mgetCommand,-2,"r",0,NULL,1,-1,1,0,0},
-    {"rpush",rpushCommand,-3,"wm",0,NULL,1,1,1,0,0},
-    {"lpush",lpushCommand,-3,"wm",0,NULL,1,1,1,0,0},
-    {"rpushx",rpushxCommand,3,"wm",0,NULL,1,1,1,0,0},
-    {"lpushx",lpushxCommand,3,"wm",0,NULL,1,1,1,0,0},
+    {"rpush",rpushCommand,-3,"wmF",0,NULL,1,1,1,0,0},
+    {"lpush",lpushCommand,-3,"wmF",0,NULL,1,1,1,0,0},
+    {"rpushx",rpushxCommand,3,"wmF",0,NULL,1,1,1,0,0},
+    {"lpushx",lpushxCommand,3,"wmF",0,NULL,1,1,1,0,0},
     {"linsert",linsertCommand,5,"wm",0,NULL,1,1,1,0,0},
-    {"rpop",rpopCommand,2,"w",0,NULL,1,1,1,0,0},
-    {"lpop",lpopCommand,2,"w",0,NULL,1,1,1,0,0},
+    {"rpop",rpopCommand,2,"wF",0,NULL,1,1,1,0,0},
+    {"lpop",lpopCommand,2,"wF",0,NULL,1,1,1,0,0},
     {"brpop",brpopCommand,-3,"ws",0,NULL,1,1,1,0,0},
     {"brpoplpush",brpoplpushCommand,4,"wms",0,NULL,1,2,1,0,0},
     {"blpop",blpopCommand,-3,"ws",0,NULL,1,-2,1,0,0},
-    {"llen",llenCommand,2,"r",0,NULL,1,1,1,0,0},
+    {"llen",llenCommand,2,"rF",0,NULL,1,1,1,0,0},
     {"lindex",lindexCommand,3,"r",0,NULL,1,1,1,0,0},
     {"lset",lsetCommand,4,"wm",0,NULL,1,1,1,0,0},
     {"lrange",lrangeCommand,4,"r",0,NULL,1,1,1,0,0},
     {"ltrim",ltrimCommand,4,"w",0,NULL,1,1,1,0,0},
     {"lrem",lremCommand,4,"w",0,NULL,1,1,1,0,0},
     {"rpoplpush",rpoplpushCommand,3,"wm",0,NULL,1,2,1,0,0},
-    {"sadd",saddCommand,-3,"wm",0,NULL,1,1,1,0,0},
-    {"srem",sremCommand,-3,"w",0,NULL,1,1,1,0,0},
-    {"smove",smoveCommand,4,"w",0,NULL,1,2,1,0,0},
-    {"sismember",sismemberCommand,3,"r",0,NULL,1,1,1,0,0},
-    {"scard",scardCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"spop",spopCommand,2,"wRs",0,NULL,1,1,1,0,0},
+    {"sadd",saddCommand,-3,"wmF",0,NULL,1,1,1,0,0},
+    {"srem",sremCommand,-3,"wF",0,NULL,1,1,1,0,0},
+    {"smove",smoveCommand,4,"wF",0,NULL,1,2,1,0,0},
+    {"sismember",sismemberCommand,3,"rF",0,NULL,1,1,1,0,0},
+    {"scard",scardCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"spop",spopCommand,2,"wRsF",0,NULL,1,1,1,0,0},
     {"srandmember",srandmemberCommand,-2,"rR",0,NULL,1,1,1,0,0},
     {"sinter",sinterCommand,-2,"rS",0,NULL,1,-1,1,0,0},
     {"sinterstore",sinterstoreCommand,-3,"wm",0,NULL,1,-1,1,0,0},
@@ -166,9 +170,9 @@ struct redisCommand redisCommandTable[] = {
     {"sdiffstore",sdiffstoreCommand,-3,"wm",0,NULL,1,-1,1,0,0},
     {"smembers",sinterCommand,2,"rS",0,NULL,1,1,1,0,0},
     {"sscan",sscanCommand,-3,"rR",0,NULL,1,1,1,0,0},
-    {"zadd",zaddCommand,-4,"wm",0,NULL,1,1,1,0,0},
-    {"zincrby",zincrbyCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"zrem",zremCommand,-3,"w",0,NULL,1,1,1,0,0},
+    {"zadd",zaddCommand,-4,"wmF",0,NULL,1,1,1,0,0},
+    {"zincrby",zincrbyCommand,4,"wmF",0,NULL,1,1,1,0,0},
+    {"zrem",zremCommand,-3,"wF",0,NULL,1,1,1,0,0},
     {"zremrangebyscore",zremrangebyscoreCommand,4,"w",0,NULL,1,1,1,0,0},
     {"zremrangebyrank",zremrangebyrankCommand,4,"w",0,NULL,1,1,1,0,0},
     {"zremrangebylex",zremrangebylexCommand,4,"w",0,NULL,1,1,1,0,0},
@@ -179,58 +183,58 @@ struct redisCommand redisCommandTable[] = {
     {"zrevrangebyscore",zrevrangebyscoreCommand,-4,"r",0,NULL,1,1,1,0,0},
     {"zrangebylex",zrangebylexCommand,-4,"r",0,NULL,1,1,1,0,0},
     {"zrevrangebylex",zrevrangebylexCommand,-4,"r",0,NULL,1,1,1,0,0},
-    {"zcount",zcountCommand,4,"r",0,NULL,1,1,1,0,0},
-    {"zlexcount",zlexcountCommand,4,"r",0,NULL,1,1,1,0,0},
+    {"zcount",zcountCommand,4,"rF",0,NULL,1,1,1,0,0},
+    {"zlexcount",zlexcountCommand,4,"rF",0,NULL,1,1,1,0,0},
     {"zrevrange",zrevrangeCommand,-4,"r",0,NULL,1,1,1,0,0},
-    {"zcard",zcardCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"zscore",zscoreCommand,3,"r",0,NULL,1,1,1,0,0},
-    {"zrank",zrankCommand,3,"r",0,NULL,1,1,1,0,0},
-    {"zrevrank",zrevrankCommand,3,"r",0,NULL,1,1,1,0,0},
+    {"zcard",zcardCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"zscore",zscoreCommand,3,"rF",0,NULL,1,1,1,0,0},
+    {"zrank",zrankCommand,3,"rF",0,NULL,1,1,1,0,0},
+    {"zrevrank",zrevrankCommand,3,"rF",0,NULL,1,1,1,0,0},
     {"zscan",zscanCommand,-3,"rR",0,NULL,1,1,1,0,0},
-    {"hset",hsetCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"hsetnx",hsetnxCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"hget",hgetCommand,3,"r",0,NULL,1,1,1,0,0},
+    {"hset",hsetCommand,4,"wmF",0,NULL,1,1,1,0,0},
+    {"hsetnx",hsetnxCommand,4,"wmF",0,NULL,1,1,1,0,0},
+    {"hget",hgetCommand,3,"rF",0,NULL,1,1,1,0,0},
     {"hmset",hmsetCommand,-4,"wm",0,NULL,1,1,1,0,0},
     {"hmget",hmgetCommand,-3,"r",0,NULL,1,1,1,0,0},
-    {"hincrby",hincrbyCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"hincrbyfloat",hincrbyfloatCommand,4,"wm",0,NULL,1,1,1,0,0},
-    {"hdel",hdelCommand,-3,"w",0,NULL,1,1,1,0,0},
-    {"hlen",hlenCommand,2,"r",0,NULL,1,1,1,0,0},
+    {"hincrby",hincrbyCommand,4,"wmF",0,NULL,1,1,1,0,0},
+    {"hincrbyfloat",hincrbyfloatCommand,4,"wmF",0,NULL,1,1,1,0,0},
+    {"hdel",hdelCommand,-3,"wF",0,NULL,1,1,1,0,0},
+    {"hlen",hlenCommand,2,"rF",0,NULL,1,1,1,0,0},
     {"hkeys",hkeysCommand,2,"rS",0,NULL,1,1,1,0,0},
     {"hvals",hvalsCommand,2,"rS",0,NULL,1,1,1,0,0},
     {"hgetall",hgetallCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"hexists",hexistsCommand,3,"r",0,NULL,1,1,1,0,0},
+    {"hexists",hexistsCommand,3,"rF",0,NULL,1,1,1,0,0},
     {"hscan",hscanCommand,-3,"rR",0,NULL,1,1,1,0,0},
-    {"incrby",incrbyCommand,3,"wm",0,NULL,1,1,1,0,0},
-    {"decrby",decrbyCommand,3,"wm",0,NULL,1,1,1,0,0},
-    {"incrbyfloat",incrbyfloatCommand,3,"wm",0,NULL,1,1,1,0,0},
+    {"incrby",incrbyCommand,3,"wmF",0,NULL,1,1,1,0,0},
+    {"decrby",decrbyCommand,3,"wmF",0,NULL,1,1,1,0,0},
+    {"incrbyfloat",incrbyfloatCommand,3,"wmF",0,NULL,1,1,1,0,0},
     {"getset",getsetCommand,3,"wm",0,NULL,1,1,1,0,0},
     {"mset",msetCommand,-3,"wm",0,NULL,1,-1,2,0,0},
     {"msetnx",msetnxCommand,-3,"wm",0,NULL,1,-1,2,0,0},
     {"randomkey",randomkeyCommand,1,"rR",0,NULL,0,0,0,0,0},
-    {"select",selectCommand,2,"rl",0,NULL,0,0,0,0,0},
-    {"move",moveCommand,3,"w",0,NULL,1,1,1,0,0},
+    {"select",selectCommand,2,"rlF",0,NULL,0,0,0,0,0},
+    {"move",moveCommand,3,"wF",0,NULL,1,1,1,0,0},
     {"rename",renameCommand,3,"w",0,NULL,1,2,1,0,0},
-    {"renamenx",renamenxCommand,3,"w",0,NULL,1,2,1,0,0},
-    {"expire",expireCommand,3,"w",0,NULL,1,1,1,0,0},
-    {"expireat",expireatCommand,3,"w",0,NULL,1,1,1,0,0},
-    {"pexpire",pexpireCommand,3,"w",0,NULL,1,1,1,0,0},
-    {"pexpireat",pexpireatCommand,3,"w",0,NULL,1,1,1,0,0},
+    {"renamenx",renamenxCommand,3,"wF",0,NULL,1,2,1,0,0},
+    {"expire",expireCommand,3,"wF",0,NULL,1,1,1,0,0},
+    {"expireat",expireatCommand,3,"wF",0,NULL,1,1,1,0,0},
+    {"pexpire",pexpireCommand,3,"wF",0,NULL,1,1,1,0,0},
+    {"pexpireat",pexpireatCommand,3,"wF",0,NULL,1,1,1,0,0},
     {"keys",keysCommand,2,"rS",0,NULL,0,0,0,0,0},
     {"scan",scanCommand,-2,"rR",0,NULL,0,0,0,0,0},
-    {"dbsize",dbsizeCommand,1,"r",0,NULL,0,0,0,0,0},
-    {"auth",authCommand,2,"rslt",0,NULL,0,0,0,0,0},
-    {"ping",pingCommand,1,"rt",0,NULL,0,0,0,0,0},
-    {"echo",echoCommand,2,"r",0,NULL,0,0,0,0,0},
+    {"dbsize",dbsizeCommand,1,"rF",0,NULL,0,0,0,0,0},
+    {"auth",authCommand,2,"rsltF",0,NULL,0,0,0,0,0},
+    {"ping",pingCommand,-1,"rtF",0,NULL,0,0,0,0,0},
+    {"echo",echoCommand,2,"rF",0,NULL,0,0,0,0,0},
     {"save",saveCommand,1,"ars",0,NULL,0,0,0,0,0},
     {"bgsave",bgsaveCommand,1,"ar",0,NULL,0,0,0,0,0},
     {"bgrewriteaof",bgrewriteaofCommand,1,"ar",0,NULL,0,0,0,0,0},
     {"shutdown",shutdownCommand,-1,"arlt",0,NULL,0,0,0,0,0},
-    {"lastsave",lastsaveCommand,1,"rR",0,NULL,0,0,0,0,0},
-    {"type",typeCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"multi",multiCommand,1,"rs",0,NULL,0,0,0,0,0},
+    {"lastsave",lastsaveCommand,1,"rRF",0,NULL,0,0,0,0,0},
+    {"type",typeCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"multi",multiCommand,1,"rsF",0,NULL,0,0,0,0,0},
     {"exec",execCommand,1,"sM",0,NULL,0,0,0,0,0},
-    {"discard",discardCommand,1,"rs",0,NULL,0,0,0,0,0},
+    {"discard",discardCommand,1,"rsF",0,NULL,0,0,0,0,0},
     {"sync",syncCommand,1,"ars",0,NULL,0,0,0,0,0},
     {"psync",syncCommand,3,"ars",0,NULL,0,0,0,0,0},
     {"replconf",replconfCommand,-1,"arslt",0,NULL,0,0,0,0,0},
@@ -239,9 +243,9 @@ struct redisCommand redisCommandTable[] = {
     {"sort",sortCommand,-2,"wm",0,sortGetKeys,1,1,1,0,0},
     {"info",infoCommand,-1,"rlt",0,NULL,0,0,0,0,0},
     {"monitor",monitorCommand,1,"ars",0,NULL,0,0,0,0,0},
-    {"ttl",ttlCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"pttl",pttlCommand,2,"r",0,NULL,1,1,1,0,0},
-    {"persist",persistCommand,2,"w",0,NULL,1,1,1,0,0},
+    {"ttl",ttlCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"pttl",pttlCommand,2,"rF",0,NULL,1,1,1,0,0},
+    {"persist",persistCommand,2,"wF",0,NULL,1,1,1,0,0},
     {"slaveof",slaveofCommand,3,"ast",0,NULL,0,0,0,0,0},
     {"role",roleCommand,1,"last",0,NULL,0,0,0,0,0},
     {"debug",debugCommand,-2,"as",0,NULL,0,0,0,0,0},
@@ -250,34 +254,36 @@ struct redisCommand redisCommandTable[] = {
     {"unsubscribe",unsubscribeCommand,-1,"rpslt",0,NULL,0,0,0,0,0},
     {"psubscribe",psubscribeCommand,-2,"rpslt",0,NULL,0,0,0,0,0},
     {"punsubscribe",punsubscribeCommand,-1,"rpslt",0,NULL,0,0,0,0,0},
-    {"publish",publishCommand,3,"pltr",0,NULL,0,0,0,0,0},
+    {"publish",publishCommand,3,"pltrF",0,NULL,0,0,0,0,0},
     {"pubsub",pubsubCommand,-2,"pltrR",0,NULL,0,0,0,0,0},
-    {"watch",watchCommand,-2,"rs",0,NULL,1,-1,1,0,0},
-    {"unwatch",unwatchCommand,1,"rs",0,NULL,0,0,0,0,0},
+    {"watch",watchCommand,-2,"rsF",0,NULL,1,-1,1,0,0},
+    {"unwatch",unwatchCommand,1,"rsF",0,NULL,0,0,0,0,0},
     {"cluster",clusterCommand,-2,"ar",0,NULL,0,0,0,0,0},
     {"restore",restoreCommand,-4,"awm",0,NULL,1,1,1,0,0},
     {"restore-asking",restoreCommand,-4,"awmk",0,NULL,1,1,1,0,0},
     {"migrate",migrateCommand,-6,"aw",0,NULL,0,0,0,0,0},
     {"asking",askingCommand,1,"r",0,NULL,0,0,0,0,0},
-    {"readonly",readonlyCommand,1,"r",0,NULL,0,0,0,0,0},
-    {"readwrite",readwriteCommand,1,"r",0,NULL,0,0,0,0,0},
+    {"readonly",readonlyCommand,1,"rF",0,NULL,0,0,0,0,0},
+    {"readwrite",readwriteCommand,1,"rF",0,NULL,0,0,0,0,0},
     {"dump",dumpCommand,2,"ar",0,NULL,1,1,1,0,0},
-    {"object",objectCommand,-2,"r",0,NULL,2,2,2,0,0},
+    {"object",objectCommand,3,"r",0,NULL,2,2,2,0,0},
     {"client",clientCommand,-2,"ar",0,NULL,0,0,0,0,0},
     {"eval",evalCommand,-3,"s",0,evalGetKeys,0,0,0,0,0},
     {"evalsha",evalShaCommand,-3,"s",0,evalGetKeys,0,0,0,0,0},
     {"slowlog",slowlogCommand,-2,"r",0,NULL,0,0,0,0,0},
     {"script",scriptCommand,-2,"ras",0,NULL,0,0,0,0,0},
-    {"time",timeCommand,1,"rR",0,NULL,0,0,0,0,0},
+    {"time",timeCommand,1,"rRF",0,NULL,0,0,0,0,0},
     {"bitop",bitopCommand,-4,"wm",0,NULL,2,-1,1,0,0},
     {"bitcount",bitcountCommand,-2,"r",0,NULL,1,1,1,0,0},
     {"bitpos",bitposCommand,-3,"r",0,NULL,1,1,1,0,0},
     {"wait",waitCommand,3,"rs",0,NULL,0,0,0,0,0},
+    {"command",commandCommand,0,"rlt",0,NULL,0,0,0,0,0},
     {"pfselftest",pfselftestCommand,1,"r",0,NULL,0,0,0,0,0},
-    {"pfadd",pfaddCommand,-2,"wm",0,NULL,1,1,1,0,0},
+    {"pfadd",pfaddCommand,-2,"wmF",0,NULL,1,1,1,0,0},
     {"pfcount",pfcountCommand,-2,"w",0,NULL,1,1,1,0,0},
     {"pfmerge",pfmergeCommand,-2,"wm",0,NULL,1,-1,1,0,0},
-    {"pfdebug",pfdebugCommand,-3,"w",0,NULL,0,0,0,0,0}
+    {"pfdebug",pfdebugCommand,-3,"w",0,NULL,0,0,0,0,0},
+    {"latency",latencyCommand,-2,"arslt",0,NULL,0,0,0,0,0}
 };
 
 struct evictionPoolEntry *evictionPoolAlloc(void);
@@ -356,7 +362,7 @@ void redisLogFromHandler(int level, const char *msg) {
 
     if ((level&0xff) < server.verbosity || (log_to_stdout && server.daemonize))
         return;
-    fd = log_to_stdout ? STDOUT_FILENO : 
+    fd = log_to_stdout ? STDOUT_FILENO :
                          open(server.logfile, O_APPEND|O_CREAT|O_WRONLY, 0644);
     if (fd == -1) return;
     ll2string(buf,sizeof(buf),getpid());
@@ -852,10 +858,11 @@ void activeExpireCycle(int type) {
              * expire. So after a given amount of milliseconds return to the
              * caller waiting for the other active expire cycle. */
             iteration++;
-            if ((iteration & 0xf) == 0 && /* check once every 16 iterations. */
-                (ustime()-start) > timelimit)
-            {
-                timelimit_exit = 1;
+            if ((iteration & 0xf) == 0) { /* check once every 16 iterations. */
+                long long elapsed = ustime()-start;
+
+                latencyAddSampleIfNeeded("expire-cycle",elapsed/1000);
+                if (elapsed > timelimit) timelimit_exit = 1;
             }
             if (timelimit_exit) return;
             /* We don't repeat the cycle if there are less than 25% of keys
@@ -900,8 +907,7 @@ int clientsCronHandleTimeout(redisClient *c) {
         !(c->flags & REDIS_SLAVE) &&    /* no timeout for slaves */
         !(c->flags & REDIS_MASTER) &&   /* no timeout for masters */
         !(c->flags & REDIS_BLOCKED) &&  /* no timeout for BLPOP */
-        dictSize(c->pubsub_channels) == 0 && /* no timeout for pubsub */
-        listLength(c->pubsub_patterns) == 0 &&
+        !(c->flags & REDIS_PUBSUB) &&   /* no timeout for Pub/Sub clients */
         (now - c->lastinteraction > server.maxidletime))
     {
         redisLog(REDIS_VERBOSE,"Closing idle client");
@@ -1140,7 +1146,7 @@ int serverCron(struct aeEventLoop *eventLoop, long long id, void *clientData) {
         if ((pid = wait3(&statloc,WNOHANG,NULL)) != 0) {
             int exitcode = WEXITSTATUS(statloc);
             int bysignal = 0;
-            
+
             if (WIFSIGNALED(statloc)) bysignal = WTERMSIG(statloc);
 
             if (pid == server.rdb_child_pid) {
@@ -1506,10 +1512,13 @@ void initServerConfig() {
     server.lpushCommand = lookupCommandByCString("lpush");
     server.lpopCommand = lookupCommandByCString("lpop");
     server.rpopCommand = lookupCommandByCString("rpop");
-    
+
     /* Slow log */
     server.slowlog_log_slower_than = REDIS_SLOWLOG_LOG_SLOWER_THAN;
     server.slowlog_max_len = REDIS_SLOWLOG_MAX_LEN;
+
+    /* Latency monitor */
+    server.latency_monitor_threshold = REDIS_DEFAULT_LATENCY_MONITOR_THRESHOLD;
 
     /* Debugging */
     server.assert_failed = "<no assertion failed>";
@@ -1676,6 +1685,7 @@ void resetServerStats(void) {
     server.stat_keyspace_misses = 0;
     server.stat_keyspace_hits = 0;
     server.stat_fork_time = 0;
+    server.stat_fork_rate = 0;
     server.stat_rejected_conn = 0;
     server.stat_sync_full = 0;
     server.stat_sync_partial_ok = 0;
@@ -1820,6 +1830,7 @@ void initServer() {
     replicationScriptCacheInit();
     scriptingInit();
     slowlogInit();
+    latencyMonitorInit();
     bioInit();
 }
 
@@ -1848,6 +1859,7 @@ void populateCommandTable(void) {
             case 't': c->flags |= REDIS_CMD_STALE; break;
             case 'M': c->flags |= REDIS_CMD_SKIP_MONITOR; break;
             case 'k': c->flags |= REDIS_CMD_ASKING; break;
+            case 'F': c->flags |= REDIS_CMD_FAST; break;
             default: redisPanic("Unsupported command flag"); break;
             }
             f++;
@@ -2012,8 +2024,12 @@ void call(redisClient *c, int flags) {
 
     /* Log the command into the Slow log if needed, and populate the
      * per-command statistics that we show in INFO commandstats. */
-    if (flags & REDIS_CALL_SLOWLOG && c->cmd->proc != execCommand)
+    if (flags & REDIS_CALL_SLOWLOG && c->cmd->proc != execCommand) {
+        char *latency_event = (c->cmd->flags & REDIS_CMD_FAST) ?
+                              "fast-command" : "command";
+        latencyAddSampleIfNeeded(latency_event,duration/1000);
         slowlogPushEntryIfNeeded(c->argv,c->argc,duration);
+    }
     if (flags & REDIS_CALL_STATS) {
         c->cmd->microseconds += duration;
         c->cmd->calls++;
@@ -2194,8 +2210,8 @@ int processCommand(redisClient *c) {
     }
 
     /* Only allow SUBSCRIBE and UNSUBSCRIBE in the context of Pub/Sub */
-    if ((dictSize(c->pubsub_channels) > 0 || listLength(c->pubsub_patterns) > 0)
-        &&
+    if (c->flags & REDIS_PUBSUB &&
+        c->cmd->proc != pingCommand &&
         c->cmd->proc != subscribeCommand &&
         c->cmd->proc != unsubscribeCommand &&
         c->cmd->proc != psubscribeCommand &&
@@ -2382,8 +2398,29 @@ void authCommand(redisClient *c) {
     }
 }
 
+/* The PING command. It works in a different way if the client is in
+ * in Pub/Sub mode. */
 void pingCommand(redisClient *c) {
-    addReply(c,shared.pong);
+    /* The command takes zero or one arguments. */
+    if (c->argc > 2) {
+        addReplyErrorFormat(c,"wrong number of arguments for '%s' command",
+            c->cmd->name);
+        return;
+    }
+
+    if (c->flags & REDIS_PUBSUB) {
+        addReply(c,shared.mbulkhdr[2]);
+        addReplyBulkCBuffer(c,"pong",4);
+        if (c->argc == 1)
+            addReplyBulkCBuffer(c,"",0);
+        else
+            addReplyBulk(c,c->argv[1]);
+    } else {
+        if (c->argc == 1)
+            addReply(c,shared.pong);
+        else
+            addReplyBulk(c,c->argv[1]);
+    }
 }
 
 void echoCommand(redisClient *c) {
@@ -2399,6 +2436,97 @@ void timeCommand(redisClient *c) {
     addReplyMultiBulkLen(c,2);
     addReplyBulkLongLong(c,tv.tv_sec);
     addReplyBulkLongLong(c,tv.tv_usec);
+}
+
+
+/* Helper function for addReplyCommand() to output flags. */
+int addReplyCommandFlag(redisClient *c, struct redisCommand *cmd, int f, char *reply) {
+    if (cmd->flags & f) {
+        addReplyStatus(c, reply);
+        return 1;
+    }
+    return 0;
+}
+
+/* Output the representation of a Redis command. Used by the COMMAND command. */
+void addReplyCommand(redisClient *c, struct redisCommand *cmd) {
+    if (!cmd) {
+        addReply(c, shared.nullbulk);
+    } else {
+        /* We are adding: command name, arg count, flags, first, last, offset */
+        addReplyMultiBulkLen(c, 6);
+        addReplyBulkCString(c, cmd->name);
+        addReplyLongLong(c, cmd->arity);
+
+        int flagcount = 0;
+        void *flaglen = addDeferredMultiBulkLength(c);
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_WRITE, "write");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_READONLY, "readonly");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_DENYOOM, "denyoom");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_ADMIN, "admin");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_PUBSUB, "pubsub");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_NOSCRIPT, "noscript");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_RANDOM, "random");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_SORT_FOR_SCRIPT,"sort_for_script");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_LOADING, "loading");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_STALE, "stale");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_SKIP_MONITOR, "skip_monitor");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_ASKING, "asking");
+        flagcount += addReplyCommandFlag(c,cmd,REDIS_CMD_FAST, "fast");
+        if (cmd->getkeys_proc) {
+            addReplyStatus(c, "movablekeys");
+            flagcount += 1;
+        }
+        setDeferredMultiBulkLength(c, flaglen, flagcount);
+
+        addReplyLongLong(c, cmd->firstkey);
+        addReplyLongLong(c, cmd->lastkey);
+        addReplyLongLong(c, cmd->keystep);
+    }
+}
+
+/* COMMAND <subcommand> <args> */
+void commandCommand(redisClient *c) {
+    dictIterator *di;
+    dictEntry *de;
+
+    if (c->argc == 1) {
+        addReplyMultiBulkLen(c, dictSize(server.commands));
+        di = dictGetIterator(server.commands);
+        while ((de = dictNext(di)) != NULL) {
+            addReplyCommand(c, dictGetVal(de));
+        }
+        dictReleaseIterator(di);
+    } else if (!strcasecmp(c->argv[1]->ptr, "info")) {
+        int i;
+        addReplyMultiBulkLen(c, c->argc-2);
+        for (i = 2; i < c->argc; i++) {
+            addReplyCommand(c, dictFetchValue(server.commands, c->argv[i]->ptr));
+        }
+    } else if (!strcasecmp(c->argv[1]->ptr, "count") && c->argc == 2) {
+        addReplyLongLong(c, dictSize(server.commands));
+    } else if (!strcasecmp(c->argv[1]->ptr,"getkeys") && c->argc >= 3) {
+        struct redisCommand *cmd = lookupCommand(c->argv[2]->ptr);
+        int *keys, numkeys, j;
+
+        if (!cmd) {
+            addReplyErrorFormat(c,"Invalid command specified");
+            return;
+        } else if ((cmd->arity > 0 && cmd->arity != c->argc-2) ||
+                   ((c->argc-2) < -cmd->arity))
+        {
+            addReplyError(c,"Invalid number of arguments specified for command");
+            return;
+        }
+
+        keys = getKeysFromCommand(cmd,c->argv+2,c->argc-2,&numkeys);
+        addReplyMultiBulkLen(c,numkeys);
+        for (j = 0; j < numkeys; j++) addReplyBulk(c,c->argv[keys[j]+2]);
+        getKeysFreeResult(keys);
+    } else {
+        addReplyError(c, "Unknown subcommand or wrong number of arguments.");
+        return;
+    }
 }
 
 /* Convert an amount of bytes into a human readable string in the form
@@ -2452,7 +2580,7 @@ sds genRedisInfoString(char *section) {
         if (server.cluster_enabled) mode = "cluster";
         else if (server.sentinel_mode) mode = "sentinel";
         else mode = "standalone";
-    
+
         if (sections++) info = sdscat(info,"\r\n");
 
         if (call_uname) {
@@ -3014,6 +3142,7 @@ void evictionPoolPopulate(dict *sampledict, dict *keydict, struct evictionPoolEn
 int freeMemoryIfNeeded(void) {
     size_t mem_used, mem_tofree, mem_freed;
     int slaves = listLength(server.slaves);
+    mstime_t latency;
 
     /* Remove the size of slaves output buffers and AOF buffer from the
      * count of used memory. */
@@ -3046,6 +3175,7 @@ int freeMemoryIfNeeded(void) {
     /* Compute how much memory we need to free. */
     mem_tofree = mem_used - server.maxmemory;
     mem_freed = 0;
+    latencyStartMonitor(latency);
     while (mem_freed < mem_tofree) {
         int j, k, keys_freed = 0;
 
@@ -3159,8 +3289,14 @@ int freeMemoryIfNeeded(void) {
                 if (slaves) flushSlavesOutputBuffers();
             }
         }
-        if (!keys_freed) return REDIS_ERR; /* nothing to free... */
+        if (!keys_freed) {
+            latencyEndMonitor(latency);
+            latencyAddSampleIfNeeded("eviction-cycle",latency);
+            return REDIS_ERR; /* nothing to free... */
+        }
     }
+    latencyEndMonitor(latency);
+    latencyAddSampleIfNeeded("eviction-cycle",latency);
     return REDIS_OK;
 }
 

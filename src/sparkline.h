@@ -1,5 +1,8 @@
-/*
- * Copyright (c) 2009-2012, Salvatore Sanfilippo <antirez at gmail dot com>
+/* sparkline.h -- ASCII Sparklines header file
+ *
+ * ---------------------------------------------------------------------------
+ *
+ * Copyright(C) 2011-2014 Salvatore Sanfilippo <antirez@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -10,9 +13,6 @@
  *   * Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *   * Neither the name of Redis nor the names of its contributors may be used
- *     to endorse or promote products derived from this software without
- *     specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -27,30 +27,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _REDIS_FMACRO_H
-#define _REDIS_FMACRO_H
+#ifndef __SPARKLINE_H
+#define __SPARKLINE_H
 
-#define _BSD_SOURCE
+/* A sequence is represented of many "samples" */
+struct sample {
+    double value;
+    char *label;
+};
 
-#if defined(__linux__)
-#define _GNU_SOURCE
-#endif
+struct sequence {
+    int length;
+    int labels;
+    struct sample *samples;
+    double min, max;
+};
 
-#if defined(__linux__) || defined(__OpenBSD__)
-#define _XOPEN_SOURCE 700
-/*
- * On NetBSD, _XOPEN_SOURCE undefines _NETBSD_SOURCE and
- * thus hides inet_aton etc.
- */
-#elif !defined(__NetBSD__)
-#define _XOPEN_SOURCE
-#endif
+#define SPARKLINE_NO_FLAGS 0
+#define SPARKLINE_FILL 1      /* Fill the area under the curve. */
+#define SPARKLINE_LOG_SCALE 2 /* Use logarithmic scale. */
 
-#if defined(__sun)
-#define _POSIX_C_SOURCE 199506L
-#endif
+struct sequence *createSparklineSequence(void);
+void sparklineSequenceAddSample(struct sequence *seq, double value, char *label);
+void freeSparklineSequence(struct sequence *seq);
+sds sparklineRenderRange(sds output, struct sequence *seq, int rows, int offset, int len, int flags);
+sds sparklineRender(sds output, struct sequence *seq, int columns, int rows, int flags);
 
-#define _LARGEFILE_SOURCE
-#define _FILE_OFFSET_BITS 64
-
-#endif
+#endif /* __SPARKLINE_H */
